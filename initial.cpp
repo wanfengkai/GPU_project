@@ -21,13 +21,37 @@
 
 // interaction forces
 
+void interactionForce(double radius, double Force,bool if_sep_dec){
+// radius is the parapmeter 'r' in Table 2
 
+	if (radius >= D){
+	Force= G * Msi* Mfe* sqrt(radius);
+	}  
+	else if (radius >= D-D*SDPsi){
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi+Kfe)*(pow(D,2)-pow(radius,2)) ;
+	}
 
-
-
-
-
-// particles' position
+        else if (radius >= D-D*SDPfe &&if_sep_dec==true){
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi+Kfe)*(pow(D,2)-pow(radius,2)) ;
+	}
+        else if (radius >= D-D*SDPfe &&if_sep_dec==false){
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi*KRPsi+Kfe)*(pow(D,2)-pow(radius,2)) ;
+        }
+        else if (radius>= Epsilon  &&if_sep_dec==true){
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi+Kfe)*(pow(D,2)-pow(radius,2)) ;
+        }
+        else if (radius>= Epsilon  &&if_sep_dec==false){
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi*KRPsi+Kfe*KRPfe)*(pow(D,2)-pow(radius,2)) ;
+        }
+        else if(radius< Epsilon){
+        radius=Epsilon;
+        Force= G * Msi * Mfe*sqrt(radius)- 0.5*(Ksi+Kfe)*(pow(D,2)-pow(radius,2)) ;
+        }
+        else{
+            // no case fit
+            fprintf(stderr,"interaction force can't be calculated");
+        }
+}
 
 
 
