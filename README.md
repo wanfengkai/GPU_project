@@ -1,2 +1,2 @@
 # GPU_project
-### Pengxin Chen Yuxiang Huan Fengkai Wan
+### Pengxin Cheng Yuxiang Huan Fengkai Wan
