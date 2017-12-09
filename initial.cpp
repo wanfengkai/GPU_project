@@ -22,7 +22,7 @@
 # define R2 300 // teacher will post it later
 # define PI 3.14
 # define Init_V 3.2416
-# define CENTER_MASS_X 23925
+# define CENTER_MASS_X 3185.5
 # define CENTER_MASS_Z 9042.7
 # define OMEGA 10 // wait for teacher
 struct Particle
