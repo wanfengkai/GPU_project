@@ -17,6 +17,8 @@ git commit -m 'message why you add'
 
 git push
 
+Cuda reference :https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch31.html
+
 Cuda intergration:
 
 
