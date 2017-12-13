@@ -28,5 +28,12 @@ nvcc -arch=sm_30 -c part.cu -o part.o
 g++ main.cpp -o main.out part.o -L/usr/local/cuda-9.0/lib64 -lcudart
 
 latex public:
-https://www.overleaf.com/
+https://www.overleaf.com/12785258qvjpxpnpjpyx
+
+Here is our final report.
+
+We can edit it online.
+
+
+
  
