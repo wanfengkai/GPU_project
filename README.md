@@ -21,7 +21,7 @@ Cuda reference :https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch31.html
 
 Cuda intergration:
 
-
+export PATH=/usr/local/cuda-9.0/bin:$PATH
 
 nvcc -arch=sm_30 -c part.cu -o part.o
 
