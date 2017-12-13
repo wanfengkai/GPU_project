@@ -31,6 +31,8 @@ struct Particle
 	float3 position_outer;
 	float3 velocity_iner;
 	float3 velocity_outer;
+	bool earthmoon;   // True :earth  False :moon
+
 };
 
 
