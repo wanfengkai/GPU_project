@@ -1,7 +1,5 @@
 #include "common.hpp"
 #include "util.hpp"
-#include "part.h"
-
 
 using namespace std;
 using namespace glm;
@@ -13,17 +11,61 @@ GLuint MLoc, VPLoc, MVPLoc, inputColorLoc;
 
 const unsigned int width = 1280;
 const unsigned int height = 720;
-
+const int NUM_PARTICLES = 50;
 
 float fov = 45.0f;
-float rotangle = 0.0f;
+float angle1 = 0.0f;
 int dt = 1;
 
-Particle cpuP[P_NUM];
-Particle cpuA[P_NUM];
+struct Particle
+{
+    glm::vec3 p;
+    glm::vec3 v;
+};
+
+Particle Pd[NUM_PARTICLES];
 
 
+void initial(Particle *Pd){
+   
+    for (int i = 0; i<NUM_PARTICLES; i++)  
+    {
+        
+        Pd[i].p.x =   5 * i / NUM_PARTICLES + 5 * rand() / float(RAND_MAX) ;
+        Pd[i].p.y =   i / NUM_PARTICLES + 5 * rand() / float(RAND_MAX) ;
+        Pd[i].p.z =   i / NUM_PARTICLES + 5 * rand() / float(RAND_MAX) ;
+    }
+}
 
+void update(Particle *Pd){
+   
+    for (int i = 0; i<NUM_PARTICLES; i++)  
+    {
+        if(i % 4 == 0){
+        Pd[i].v.x =  0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.y =  0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.z =  0.0f ;
+    }
+        if(i % 4 == 1){
+        Pd[i].v.x =  -0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.y =  0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.z =  0.0f ;
+    }
+        if(i % 4 == 2){
+        Pd[i].v.x =  0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.y =  -0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.z =  0.0f ;
+    }
+        if(i % 4 == 3){
+        Pd[i].v.x =  -0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.y =  -0.0001f* rand() / float(RAND_MAX) ;
+        Pd[i].v.z =  0.0f ;
+    }
+        Pd[i].p.x += Pd[i].v.x * dt;
+        Pd[i].p.y += Pd[i].v.y * dt;
+        Pd[i].p.z += Pd[i].v.z * dt; 
+    }
+}
 
 void init()
 {
@@ -44,10 +86,9 @@ void init()
     MLoc = glGetUniformLocation(shaderProgram, "M"); 
     VPLoc = glGetUniformLocation(shaderProgram, "VP");
     inputColorLoc = glGetUniformLocation(shaderProgram, "inputColor");
+    //printf("inputColorLoc=%u\n", inputColorLoc);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  
 }
 
 void release()
@@ -78,36 +119,39 @@ void display()
     // must replace this function following the previous indications.
     //glFlush();
     
-    mat4 M,V,P,MVP,VP; 
-    //matrix V
-    mat4 rotationMat(1);  
-    rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 1.0, 0.0));
-    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 9.0f, 1.0f));   
-    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
-    //matrix P
-    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 100.0f);
-    //matrix VP
-    VP = P * V;  
-    glUniformMatrix4fv(VPLoc, 1, GL_FALSE, glm::value_ptr(VP)); 
-   
 
-    for (int i = 0; i<P_NUM; i++)  
+
+    mat4 M,V,P,MVP,VP; 
+    mat4 rotationMat(1);  
+    rotationMat = rotate(rotationMat, angle1, vec3(0.0, 1.0, 0.0));
+    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 9.0f, 1.0f)); 
+    
+    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
+    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 100.0f);
+    VP = P * V;
+    
+    glUniformMatrix4fv(VPLoc, 1, GL_FALSE, glm::value_ptr(VP)); 
+    
+
+
+    for (int i = 0; i<NUM_PARTICLES; i++)  
     {  
-        vec4 inputColor = vec4(0.0f, 0.5f, 0.0f, 0.5f);      
+        vec4 inputColor = vec4(0.5f - ((float)i/NUM_PARTICLES)/2.f, ((float)i/NUM_PARTICLES), 0.5f + ((float)i/NUM_PARTICLES)/2.0f, 0.5f);
+        
         srand(i);  
         float r= 10 * rand() / float(RAND_MAX);
+        update(Pd);
 
-        launchkernel(cpuA, cpuP);
-        // By default, this is identity matrix
-        M = mat4();
-        M = translate(M, vec3(Pa[i].position.x, Pa[i].position.y, Pa[i].position.z));
+        M = mat4();// By default, this is identity matrix
+        M = translate(M, vec3(Pd[i].p.x, Pd[i].p.y, Pd[i].p.z));
+        //MVP = P*V*M;
+
         // pass them to the shaders
-
         glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
         glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
 
         glutSolidSphere(r,20,20);
-        //glutWireSphere(r,20,20);
+        glutWireSphere(r,20,20);
     }
     // render loop
 
@@ -143,12 +187,12 @@ void ProcessSpecialKeys(GLint key,GLint x,GLint y)
       
     if(key==GLUT_KEY_LEFT)  
     {  
-         rotangle += 0.1f;
+         angle1 += 0.1f;
     }  
  
     if(key==GLUT_KEY_RIGHT)  
     {  
-         rotangle -= 0.1f;
+         angle1 -= 0.1f;
     }  
 }  
 
@@ -157,6 +201,8 @@ void ProcessSpecialKeys(GLint key,GLint x,GLint y)
 
 int main(int argc, char **argv)
 {
+
+    initial(Pd);
     
     // Initialize FreeGLUT and create the window
     glutInit(&argc, argv);
