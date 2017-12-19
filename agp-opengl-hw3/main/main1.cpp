@@ -17,11 +17,7 @@ float fov = 45.0f;
 float angle1 = 0.0f;
 int dt = 1;
 
-struct Particle
-{
-    glm::vec3 p;
-    glm::vec3 v;
-};
+
 
 Particle Pa[NUM_PARTICLES];
 

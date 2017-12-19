@@ -27,6 +27,15 @@ nvcc -arch=sm_30 -c part.cu -o part.o
 
 g++ main.cpp -o main.out part.o -L/usr/local/cuda-9.0/lib64 -lcudart
 
+
+/usr/local/cuda-9.1/bin/nvcc -arch=sm_30 -c cuda.cu -o cuda.o
+
+
+opengl
+
+./scripts/build_libs.sh
+./scripts/run.sh
+
 latex public:
 https://www.overleaf.com/12785258qvjpxpnpjpyx
 
