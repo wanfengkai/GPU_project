@@ -261,7 +261,7 @@ __global__ void calculate_forces(void *devP, void *devA)
 {
   extern __shared__ struct Particle shParticles[];
   struct Particle *global_P = (struct Particle *)devP;
-  float3 *global_A = (struct Particle *)devA;
+  float3 *global_A = (float3 *)devA;
   float3 myPosition;
   int i, tile;
   float3 acc = {0.0f, 0.0f, 0.0f};
@@ -320,8 +320,8 @@ int main(int argc, char *argv[])
   struct Particle *devA_next;
 
   cudaMalloc(&devP, P_NUM*sizeof(struct Particle));
-  cudaMalloc(&devA, P_NUM*sizeof(struct Particle));
-  cudaMalloc(&devA_next, P_NUM*sizeof(struct Particle));
+  cudaMalloc(&devA, P_NUM*sizeof(float3));
+  cudaMalloc(&devA_next, P_NUM*sizeof(float3));
 
   initial_position_velocity<<<(P_NUM+TPB-1)/TPB, TPB>>>(t, devP);
 
