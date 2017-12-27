@@ -1,6 +1,17 @@
-#include "common.hpp"
-#include "util.hpp"
+// #include "common.hpp"
+// #include "util.hpp"
+// #include "cuda_kernel.cu"
+
 #include "part.h"
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+
+// # include <cstdlib>
+
+// wait for teacher
+
+//-------------------------------------------------------------------//
 
 
 using namespace std;
@@ -19,9 +30,9 @@ float fov = 45.0f;
 float rotangle = 0.0f;
 int dt = 1;
 
-Particle cpuP[P_NUM];
-Particle cpuA[P_NUM];
-
+bool init_display = false;
+struct Particle *cpuP = (struct Particle *)malloc(P_NUM*sizeof(struct Particle));
+// struct vecfloat3 *cpuA = (struct vecfloat3 *)malloc(P_NUM*sizeof(struct vecfloat3));
 
 
 
@@ -47,7 +58,42 @@ void init()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  
+	init_display = true;
+}
+
+
+void draw_particle()
+{
+
+    mat4 M,V,P,MVP,VP; 
+    //matrix V
+    mat4 rotationMat(1);  
+    rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 1.0, 0.0));
+    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 9.0f, 1.0f));   
+    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
+    //matrix P
+    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 100.0f);
+    //matrix VP
+    VP = P * V;  
+    glUniformMatrix4fv(VPLoc, 1, GL_FALSE, glm::value_ptr(VP)); 
+
+    for (int i = 0; i<P_NUM; i++)  
+    {  
+        vec4 inputColor = vec4(0.0f, 0.5f, 0.0f, 0.5f);      
+        srand(i);  
+        float r= 10 * rand() / float(RAND_MAX);
+
+        // By default, this is identity matrix
+        M = mat4();
+        M = translate(M, vec3(cpuP[i].position.x, cpuP[i].position.y, cpuP[i].position.z));
+        // pass them to the shaders
+
+        glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
+        glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
+
+        glutSolidSphere(r,20,20);
+        //glutWireSphere(r,20,20);
+    }
 }
 
 void release()
@@ -56,6 +102,7 @@ void release()
     glDeleteVertexArrays(1, &g_default_vao);
     
     // Do not forget to release any memory allocation here!
+	cuda_release();
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -77,38 +124,16 @@ void display()
     // queue, but this is only for single-buffered rendering. You
     // must replace this function following the previous indications.
     //glFlush();
-    
-    mat4 M,V,P,MVP,VP; 
-    //matrix V
-    mat4 rotationMat(1);  
-    rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 1.0, 0.0));
-    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 9.0f, 1.0f));   
-    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
-    //matrix P
-    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 100.0f);
-    //matrix VP
-    VP = P * V;  
-    glUniformMatrix4fv(VPLoc, 1, GL_FALSE, glm::value_ptr(VP)); 
-   
 
-    for (int i = 0; i<P_NUM; i++)  
-    {  
-        vec4 inputColor = vec4(0.0f, 0.5f, 0.0f, 0.5f);      
-        srand(i);  
-        float r= 10 * rand() / float(RAND_MAX);
-
-        launchkernel(cpuA, cpuP);
-        // By default, this is identity matrix
-        M = mat4();
-        M = translate(M, vec3(Pa[i].position.x, Pa[i].position.y, Pa[i].position.z));
-        // pass them to the shaders
-
-        glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
-        glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
-
-        glutSolidSphere(r,20,20);
-        //glutWireSphere(r,20,20);
+    if(init_display == true)
+    {
+        time_t t;
+    	time(&t);
+		particle_init(t, cpuP);
+        init_display = false;
     }
+    draw_particle();
+    particle_update(cpuP);
     // render loop
 
     glutSwapBuffers();
