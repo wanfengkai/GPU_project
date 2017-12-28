@@ -8,7 +8,7 @@
 // #include "helper_math.h"
 //#include "cuda.h"
 
-#define P_NUM 100
+#define P_NUM 10000
 #define TPB 256
 
 struct vecfloat3

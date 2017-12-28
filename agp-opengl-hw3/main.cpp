@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define D 376.78
+
 // # include <cstdlib>
 
 // wait for teacher
@@ -64,7 +66,6 @@ void init()
 
 void draw_particle()
 {
-
     mat4 M,V,P,MVP,VP; 
     //matrix V
     mat4 rotationMat(1);  
@@ -80,20 +81,29 @@ void draw_particle()
     for (int i = 0; i<P_NUM; i++)  
     {  
         vec4 inputColor = vec4(0.0f, 0.5f, 0.0f, 0.5f);      
-        srand(i);  
-        float r= 10 * rand() / float(RAND_MAX);
+ //       srand(i);  
+//        float r= 10 * rand() / float(RAND_MAX);
+		float r = D/2000.0;
+	//	printf("r is: x=%f\n", r);
 
         // By default, this is identity matrix
         M = mat4();
-        M = translate(M, vec3(cpuP[i].position.x, cpuP[i].position.y, cpuP[i].position.z));
+    //    printf("drawing particles, testing point 1\n");
+        M = translate(M, vec3(cpuP[i].position.x/1000.0, cpuP[i].position.y/1000.0, cpuP[i].position.z/1000.0));
         // pass them to the shaders
+    //    printf("Particle position is: x=%f, y=%f, z=%f\n", cpuP[i].position.x, cpuP[i].position.y, cpuP[i].position.z);
+    //    printf("drawing particles, testing point 2\n");
 
         glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
         glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
 
+    //    printf("drawing particles, testing point 3\n");
+
         glutSolidSphere(r,20,20);
+    //  printf("drawing particles, testing point 4\n");
         //glutWireSphere(r,20,20);
     }
+//	printf("drawing particles\n");
 }
 
 void release()
@@ -112,6 +122,11 @@ void display()
 {
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+ //   glLoadIdentity();
+    
+ //   glBindVertexArray(g_default_vao);
+
     
     //printf("FreeGLUT triggered the display() callback!\n");
     
@@ -130,6 +145,7 @@ void display()
         time_t t;
     	time(&t);
 		particle_init(t, cpuP);
+	//	printf("finish particle initialization\n");
         init_display = false;
     }
     draw_particle();

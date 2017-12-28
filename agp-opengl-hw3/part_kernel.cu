@@ -2,6 +2,7 @@
 #include "curand_kernel.h"
 // #include "helper_math.h"
 //#include "cuda.h"
+#include <stdio.h>
 
 // universal gravitational constant in km
 #define G  6.67408E-20
@@ -339,6 +340,7 @@ void particle_init(unsigned seed, struct Particle *cpuP)
 
     cudaMemcpy(cpuP, devP, P_NUM*sizeof(struct Particle),cudaMemcpyDeviceToHost);
 	cudaFree(devP);
+//	printf("particle initialized \n");
 //    cudaMemcpy(cpuA, devA, P_NUM*sizeof(struct vecfloat3),cudaMemcpyDeviceToHost);
 	
 //	return devA;
@@ -353,8 +355,12 @@ void particle_update(struct Particle *cpuP)
 	cudaMalloc(&devP, P_NUM*sizeof(struct Particle));
 	cudaMalloc(&devA, P_NUM*sizeof(struct vecfloat3));
 	cudaMalloc(&devA_next, P_NUM*sizeof(struct vecfloat3));
+	
+//	printf("particle updating, test point 1\n");
 
 	cudaMemcpy(devP, cpuP, P_NUM*sizeof(struct Particle),cudaMemcpyHostToDevice);
+
+//	printf("particle updating, test point 1\n");
 
     // update position
     calculate_forces<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA);
@@ -371,6 +377,7 @@ void particle_update(struct Particle *cpuP)
 	cudaFree(devP);
     cudaFree(devA);
     cudaFree(devA_next);
+//	printf("particle updated \n");
 //    cudaMemcpy(cpuA, devA, P_NUM*sizeof(vecfloat3),cudaMemcpyDeviceToHost);
 
 //    struct vecfloat3 *devA_temp = (struct vecfloat3 *)devA;
