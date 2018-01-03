@@ -31,11 +31,13 @@ const unsigned int height = 720;
 float fov = 45.0f;
 float rotangle = 0.0f;
 int dt = 1;
+vec4 red = vec4(0.5f, 0.0f, 0.0f, 0.5f);      // color red, silicate particle
+vec4 yellow = vec4(0.5f, 0.5f, 0.0f, 0.5f);      // color yellow, iron particle
+vec4 inputColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 bool init_display = false;
 struct Particle *cpuP = (struct Particle *)malloc(P_NUM*sizeof(struct Particle));
 // struct vecfloat3 *cpuA = (struct vecfloat3 *)malloc(P_NUM*sizeof(struct vecfloat3));
-
 
 
 void init()
@@ -80,30 +82,27 @@ void draw_particle()
 
     for (int i = 0; i<P_NUM; i++)  
     {  
-        vec4 inputColor = vec4(0.0f, 0.5f, 0.0f, 0.5f);      
- //       srand(i);  
-//        float r= 10 * rand() / float(RAND_MAX);
+
 		float r = D/2000.0;
-	//	printf("r is: x=%f\n", r);
 
         // By default, this is identity matrix
         M = mat4();
-    //    printf("drawing particles, testing point 1\n");
+
         M = translate(M, vec3(cpuP[i].position.x/1000.0, cpuP[i].position.y/1000.0, cpuP[i].position.z/1000.0));
-        // pass them to the shaders
-    //    printf("Particle position is: x=%f, y=%f, z=%f\n", cpuP[i].position.x, cpuP[i].position.y, cpuP[i].position.z);
-    //    printf("drawing particles, testing point 2\n");
+ 		
+ 		if (cpuP[i].p_type == true)
+ 			inputColor = red;
+ 		else
+ 			inputColor = yellow;
 
         glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
         glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
 
-    //    printf("drawing particles, testing point 3\n");
-
         glutSolidSphere(r,20,20);
-    //  printf("drawing particles, testing point 4\n");
-        //glutWireSphere(r,20,20);
+
     }
-//	printf("drawing particles\n");
+//    printf("drawing particles\n");
+
 }
 
 void release()
@@ -145,11 +144,14 @@ void display()
         time_t t;
     	time(&t);
 		particle_init(t, cpuP);
-	//	printf("finish particle initialization\n");
+		printf("particle initialization\n");
         init_display = false;
     }
+//    printf("before particle position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
     draw_particle();
     particle_update(cpuP);
+//    printf("after particle position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
+//   printf("particle update\n");
     // render loop
 
     glutSwapBuffers();

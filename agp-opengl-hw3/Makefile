@@ -1,7 +1,7 @@
 
 CPP     = g++ -std=c++11 -Wall --pedantic
 NVCC    = /usr/local/cuda/bin/nvcc -arch=sm_52
-INCDIR  = -I./ -I./util -I./modules/build/include -I/usr/local/cuda/include 
+INCDIR  = -I./ -I./util -I./modules/build/include -I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
 LIBDIR  = -L./ -L./modules/build/lib 
 BINDIR  = ./bin
 OBJDIR  = $(BINDIR)/obj
