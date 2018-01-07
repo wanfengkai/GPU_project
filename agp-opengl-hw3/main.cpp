@@ -111,7 +111,7 @@ void release()
     glDeleteVertexArrays(1, &g_default_vao);
     
     // Do not forget to release any memory allocation here!
-	cuda_release();
+//	cuda_release();
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

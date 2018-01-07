@@ -63,13 +63,9 @@ __device__ void generate_uniform_random_number(unsigned seed, int i, double* rho
 __global__ void initial_position_velocity(unsigned seed, struct Particle *particles)
 {
 
-//  extern __shared__ struct *particles;
-
     int i= blockIdx.x*blockDim.x + threadIdx.x;
-//	printf("init thread idx is: blockIdx=%d, blockDim=%d, threadIdx=%d\n", blockIdx.x, blockDim.x, threadIdx.x); 
 
 	if(i<P_NUM){
-//	printf("thread id is: %d\n", i);  
 
     double rho1, rho2, rho3;
     double miu;
@@ -218,10 +214,7 @@ __device__ double interactionForce(double radius, double sqr_r, int force_type, 
         // no case fit
         // fprintf(stderr,"interaction force can't be calculated");
     }
-//	if(accel > 100.0){
-//		printf("acc calc is: %f\n", accel);
-//		printf("radius is: %f\n", radius);
-//	}
+
     return accel;
 }
 
@@ -254,7 +247,6 @@ __device__ struct vecfloat3 bodyBodyInteraction(struct Particle pi, struct Parti
   }
   sqr_r += softeningSquared;
   float radius = sqrtf(sqr_r);
-//  printf("BBI radius is %f\n", radius);
 
   if ( pi.p_type && !pj.p_type ) {
     force_type = 0;
@@ -273,12 +265,6 @@ __device__ struct vecfloat3 bodyBodyInteraction(struct Particle pi, struct Parti
   }
   accel = interactionForce(radius, sqr_r, force_type, if_sep_dec);
   
-  if(accel > 100.0){
-	printf("acc calc is: %f, radius is: %f, pj is: %f, %f, %f, pi is: %f, %f, %f\n", accel, radius, pj.position.x, pj.position.x, pj.position.x, pi.position.x, pi.position.x, pi.position.x);
-//	printf("%f, ", radius, pj.position.x, pj.position.x, pj.position.x);
-//	printf("%f, ", radius, pi.position.x, pi.position.x, pi.position.x);
-  }
-
   acc.x += r.x / radius * accel;
   acc.y += r.y / radius * accel;
   acc.z += r.z / radius * accel;
@@ -291,52 +277,17 @@ __device__ struct vecfloat3 tile_calculation(struct Particle myParticle, struct 
   int i;
   extern __shared__ struct Particle shParticles[];
   for (i = 0; i < blockDim.x; i++) {
-//	printf("in tile: %d\n", i);
-//	printf("before BBI acc is: %f, %f, %f \n", acc.x, acc.y, acc.z);
-//	printf("my particle %d is : %f, %f, %f \n", i, myParticle.position.x, myParticle.position.y, myParticle.position.z);
-//	printf("shared particle %d is : %f, %f, %f \n", i, shParticles[i].position.x, shParticles[i].position.y, shParticles[i].position.z);
 	if (isnan(myParticle.position.x) || isnan(shParticles[i].position.x)) 
 		printf("i is %d\n", i);
 	else
     	acc = bodyBodyInteraction(myParticle, shParticles[i], acc);
-//	printf("acc is: %f\n", acc);
   }
   return acc;
 }
 
-//__global__ void calculate_forces(void *devP, void *devA)
-//{
-//  extern __shared__ struct Particle shParticles[];
-//  struct Particle *global_P = (struct Particle *)devP;
-//  struct vecfloat3 *global_A = (struct vecfloat3 *)devA;
-//  struct Particle myParticle;
-//  int i, tile;
-//  struct vecfloat3 acc = {0.0f, 0.0f, 0.0f};
-//  int gtid = blockIdx.x * blockDim.x + threadIdx.x;
-//  myParticle = global_P[gtid];
-//  for (i = 0, tile = 0; i < P_NUM; i += TPB, tile++) {
-//    int idx = tile * blockDim.x + threadIdx.x;
-//    shParticles[threadIdx.x] = global_P[idx];
-//    __syncthreads();
-//    acc = tile_calculation(myParticle, acc);
-//    __syncthreads();
-//  }
-//  // Save the result in global memory for the integration step.
-//  //float4 acc4 = {acc.x, acc.y, acc.z, 0.0f};
-//  if(gtid < P_NUM){
-//  global_A[gtid] = acc;
-//  printf("thread gid is: %d\n", gtid);
-//  } 
-//
-//}
-
 __global__ void calculate_forces(struct Particle *devP, struct vecfloat3 *devA)
 {
   extern __shared__ struct Particle shParticles[]; 
-//  printf("blockDim.x is %d \n", blockDim.x);
-  
-//  struct Particle *global_P = (struct Particle *)devP;
-//  struct vecfloat3 *global_A = (struct vecfloat3 *)devA;
   struct Particle myParticle;
   int i, tile;
   struct vecfloat3 acc; //= {0.0f, 0.0f, 0.0f}
@@ -344,49 +295,28 @@ __global__ void calculate_forces(struct Particle *devP, struct vecfloat3 *devA)
   acc.y = 0.0f;
   acc.z = 0.0f;
   int gtid = blockIdx.x * blockDim.x + threadIdx.x;
-//  printf("thread gtid is: %d\n", gtid);
   if(gtid < P_NUM){
-//	printf("testing!\n");
-//	printf("GPU particle position is: %f, %f, %f\n", devP[gtid].position.x, devP[gtid].position.y, devP[gtid].position.z);
     myParticle = devP[gtid];
 	if (isnan(myParticle.position.x)) 
 		printf("gtid is %d\n", gtid);
   	for (i = 0, tile = 0; i < P_NUM; i += TPB, tile++) {
     	int idx = tile * blockDim.x + threadIdx.x;
-//		printf("tile is : %d\n", tile);
-		if(idx < P_NUM){
-		// printf("thread idx is: %d\n", idx);
-//		printf("shParticles thread idx is: %d, test point 1\n", threadIdx.x);
     	shParticles[threadIdx.x] = devP[idx];
-//		printf("after shParticles thread idx is: %d, test point 2\n", threadIdx.x);
     	__syncthreads();
     	acc = tile_calculation(myParticle, acc);
-//		printf("CF acc is: %f, %f, %f\n", acc.x, acc.y, acc.z);
     	__syncthreads();
-		}
   	}
-  // Save the result in global memory for the integration step.
-  //float4 acc4 = {acc.x, acc.y, acc.z, 0.0f};
 
   	devA[gtid] = acc;
- // 	printf("thread gid is: %d\n", gtid);
   } 
 
 }
 
 __global__ void update_pos(struct Particle *devP, struct vecfloat3 *devA)
 {
-//  struct Particle *global_P = (struct Particle *)devP;
-//  struct vecfloat3 *global_A = (struct vecfloat3 *)devA;
- 
-  int i= blockIdx.x*blockDim.x + threadIdx.x;
-//  printf("update pos thread id is: %d\n", i); 
 
-//  if(i<P_NUM){
-//  global_P[i].position.x = global_P[i].position.x + global_P[i].velocity.x * Time_step + global_A[i].x / 2.0f * pow(Time_step, 2.0); 
-//  global_P[i].position.y = global_P[i].position.y + global_P[i].velocity.y * Time_step + global_A[i].y / 2.0f * pow(Time_step, 2.0); 
-//  global_P[i].position.z = global_P[i].position.z + global_P[i].velocity.z * Time_step + global_A[i].z / 2.0f * pow(Time_step, 2.0); 
-//  }
+  int i= blockIdx.x*blockDim.x + threadIdx.x;
+
   if(i<P_NUM){
   	devP[i].position.x = devP[i].position.x + devP[i].velocity.x * Time_step + devA[i].x / 2.0f * pow(Time_step, 2.0); 
   	devP[i].position.y = devP[i].position.y + devP[i].velocity.y * Time_step + devA[i].y / 2.0f * pow(Time_step, 2.0); 
@@ -397,17 +327,8 @@ __global__ void update_pos(struct Particle *devP, struct vecfloat3 *devA)
 
 __global__ void update_vel(struct Particle *devP, struct vecfloat3 *devA, struct vecfloat3 *devA_next)
 {
-//  struct Particle *global_P = (struct Particle *)devP;
-//  struct vecfloat3 *global_A = (struct vecfloat3 *)devA;
-//  struct vecfloat3 *global_A_next = (struct vecfloat3 *)devA_next;
 
   int i= blockIdx.x*blockDim.x + threadIdx.x;
-
-//  if(i<P_NUM){
-//  global_P[i].velocity.x = global_P[i].velocity.x + (global_A_next[i].x + global_A[i].x) / 2.0f * Time_step; 
-//  global_P[i].velocity.y = global_P[i].velocity.y + (global_A_next[i].y + global_A[i].y) / 2.0f * Time_step; 
-//  global_P[i].velocity.z = global_P[i].velocity.z + (global_A_next[i].z + global_A[i].z) / 2.0f * Time_step; 
-//  }
 
   if(i<P_NUM){
   	devP[i].velocity.x = devP[i].velocity.x + (devA_next[i].x + devA[i].x) / 2.0f * Time_step; 
@@ -420,9 +341,6 @@ __global__ void update_vel(struct Particle *devP, struct vecfloat3 *devA, struct
 
 __global__ void print_devP(struct Particle *devP, struct vecfloat3 *devA)
 {
-//  struct Particle *global_P = (struct Particle *)devP;
-//  struct vecfloat3 *global_A = (struct vecfloat3 *)devA;
-//  struct vecfloat3 *global_A_next = (struct vecfloat3 *)devA_next;
 
   int i= blockIdx.x*blockDim.x + threadIdx.x;
   if(i<P_NUM)
@@ -442,10 +360,6 @@ void particle_init(unsigned seed, struct Particle *cpuP)
 
     cudaMemcpy(cpuP, devP, P_NUM*sizeof(struct Particle),cudaMemcpyDeviceToHost);
 	cudaFree(devP);
-//	printf("particle initialized \n");
-//    cudaMemcpy(cpuA, devA, P_NUM*sizeof(struct vecfloat3),cudaMemcpyDeviceToHost);
-	
-//	return devA;
 }
 
 
@@ -457,18 +371,9 @@ void particle_update(struct Particle *cpuP)
 	checkCudaErrors(cudaMalloc(&devP, P_NUM*sizeof(struct Particle)));
 	checkCudaErrors(cudaMalloc(&devA, P_NUM*sizeof(struct vecfloat3)));
 	checkCudaErrors(cudaMalloc(&devA_next, P_NUM*sizeof(struct vecfloat3)));
-
-//	printf("particle updating, test point 1\n");
-	
-//	printf("before particle position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
  
 	checkCudaErrors(cudaMemcpy(devP, cpuP, P_NUM*sizeof(struct Particle),cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
-
-//	print_devP<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA);
- 
-
-//	printf("particle updating, test point 2\n");
 
     // update position
     calculate_forces<<<(P_NUM+TPB-1)/TPB, TPB, TPB*sizeof(struct Particle)>>>(devP, devA);
@@ -495,39 +400,16 @@ void particle_update(struct Particle *cpuP)
 	checkCudaErrors(cudaFree(devP));
     checkCudaErrors(cudaFree(devA));
     checkCudaErrors(cudaFree(devA_next));
-//	printf("particle updated \n");
-//    cudaMemcpy(cpuA, devA, P_NUM*sizeof(vecfloat3),cudaMemcpyDeviceToHost);
 
-//    struct vecfloat3 *devA_temp = (struct vecfloat3 *)devA;
-//    devA = devA_next;
-//    devA_next = devA_temp;
 }
 
-void cuda_release()
-{
+//void cuda_release()
+//{
 //    cudaFree(devP);
 //    cudaFree(devA);
 //    cudaFree(devA_next);
-}
+//}
 
 
-// void launch_kernel_initial_position_velocity(unsigned seed, void *particles)
-// {
-// 	initial_position_velocity<<<(P_NUM+TPB-1)/TPB, TPB>>>(seed, particles);
-// }
 
-// void launch_kernel_calculate_forces(void *devP, void *devA)
-// {
-// 	calculate_forces<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA);
-// }
-
-// void launch_kernel_update_pos(void *devP, void *devA)
-// {
-// 	update_pos<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA);
-// }
-
-// void launch_kernel_update_vel(void *devP, void *devA, void *devA_next)
-// {
-// 	update_vel<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA, devA_next);
-// }
 
