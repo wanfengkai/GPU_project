@@ -339,10 +339,10 @@ __global__ void update_pos(struct Particle *devP, struct vecfloat3 *devA)
   	devP[i].position.x = devP[i].position.x + devP[i].velocity.x * Time_step + devA[i].x / 2.0f * pow(Time_step, 2.0); 
   	devP[i].position.y = devP[i].position.y + devP[i].velocity.y * Time_step + devA[i].y / 2.0f * pow(Time_step, 2.0); 
   	devP[i].position.z = devP[i].position.z + devP[i].velocity.z * Time_step + devA[i].z / 2.0f * pow(Time_step, 2.0); 
-	double abs_devA = devA[i].x*devA[i].x + devA[i].y*devA[i].y + devA[i].z*devA[i].z;
+//	double abs_devA = devA[i].x*devA[i].x + devA[i].y*devA[i].y + devA[i].z*devA[i].z;
 //	if (abs_devA > 100)
 //		printf("devA in update_vel is: %f, %f, %f\n", devA[i].x, devA[i].y, devA[i].z);
-//  }
+  }
 	
 }
 
