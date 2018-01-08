@@ -88,7 +88,7 @@ void draw_particle()
         // By default, this is identity matrix
         M = mat4();
 
-        M = translate(M, vec3(cpuP[i].position.x/1000.0, cpuP[i].position.y/1000.0, cpuP[i].position.z/1000.0));
+        M = translate(M, vec3(cpuP[i].position.x/1000000.0, cpuP[i].position.y/1000000.0, cpuP[i].position.z/1000000.0));
  		
  		if (cpuP[i].p_type == true)
  			inputColor = red;
