@@ -33,6 +33,8 @@
 #define softeningSquared 0.01f
 
 
+//6.67408E-20 * 1.9549E20/
+//accel = G * M / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r) 
 
 struct vecfloat3
 {
@@ -152,31 +154,35 @@ __global__ void initial_position_velocity(unsigned seed, struct Particle *partic
 
 __device__ double interactionForce(double radius, double sqr_r, int force_type, bool if_sep_dec){
 // radius is the parapmeter 'r' in Table 2
-    double M, K1, K2, KRP1, KRP2;
+    double M1, M2, K1, K2, KRP1, KRP2;
     double accel;
     if (force_type == 0) {  // accel for silicate particle, silicate-iron 
-        M = Mfe;
+        M1 = Mfe;
+		M2 = Msi;
         K1 = Ksi;
         K2 = Kfe;
         KRP1 = KRPsi;
         KRP2 = KRPfe;
     }
     else if (force_type == 1) { // accel for iron particle, iron-silicate
-        M = Msi;
+        M1 = Msi;
+		M2 = Mfe;
         K1 = Ksi;
         K2 = Kfe;
         KRP1 = KRPsi;
         KRP2 = KRPfe;
     }
     else if (force_type == 2) { // accel for silicate particle, silicate-silicate
-        M = Msi;
+        M1 = Msi;
+		M2 = Msi;
         K1 = Ksi;
         K2 = Ksi;
         KRP1 = KRPsi;
         KRP2 = KRPsi;
     }
     else if (force_type == 3) { // accel for iron particle, iron-iron
-        M = Mfe;
+        M1 = Mfe;
+		M2 = Mfe;
         K1 = Kfe;
         K2 = Kfe;
         KRP1 = KRPfe;
@@ -188,32 +194,35 @@ __device__ double interactionForce(double radius, double sqr_r, int force_type, 
 
 
     if (radius >= D){
-        accel = G * M / sqr_r;
+        accel = G * M1 / sqr_r;
     }  
     else if (radius >= D-D*SDPsi){
-        accel = G * M / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r) ;
+        accel = G * M1 / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r)/M2;
     }
 
     else if (radius >= D-D*SDPfe && if_sep_dec==true){
-        accel = G * M / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r) ;
+        accel = G * M1 / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r)/M2 ;
     }
     else if (radius >= D-D*SDPfe && if_sep_dec==false){
-        accel = G * M / sqr_r - 0.5*(K1*KRP1+K2)*(D*D-sqr_r) ;
+        accel = G * M1 / sqr_r - 0.5*(K1*KRP1+K2)*(D*D-sqr_r)/M2 ;
     }
     else if (radius >= Epsilon  && if_sep_dec==true){
-        accel = G * M / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r) ;
+        accel = G * M1 / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r)/M2 ;
     }
     else if (radius >= Epsilon  && if_sep_dec==false){
-        accel = G * M / sqr_r - 0.5*(K1*KRP1+K2*KRP2)*(D*D-sqr_r) ;
+        accel = G * M1 / sqr_r - 0.5*(K1*KRP1+K2*KRP2)*(D*D-sqr_r)/M2 ;
     }
-    else if(radius < Epsilon){
-        radius=Epsilon;
-        accel = G * M / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r) ;
+    else if(radius < Epsilon && radius > 0.11){
+//        radius=Epsilon;
+		sqr_r = Epsilon*Epsilon;
+        accel = G * M1 / sqr_r - 0.5*(K1+K2)*(D*D-sqr_r)/M2 ;
     }
-    else{
-        // no case fit
-        // fprintf(stderr,"interaction force can't be calculated");
-    }
+	else {
+//		printf("same particles detected!\n");
+		accel = 0;
+	}
+//	if ((accel > 10) || (accel < -10))
+//		printf("accel is : %f; radius is : %f; sqr_r is %f\n", accel, radius, sqr_r);
 
     return accel;
 }
@@ -229,10 +238,12 @@ __device__ struct vecfloat3 bodyBodyInteraction(struct Particle pi, struct Parti
   r.x = pj.position.x - pi.position.x;
   r.y = pj.position.y - pi.position.y;
   r.z = pj.position.z - pi.position.z;
+//  printf("r is: %f, %f, %f\n", r.x, r.y, r.z);
 
   v.x = pj.velocity.x - pi.velocity.x;
   v.y = pj.velocity.y - pi.velocity.y;
   v.z = pj.velocity.z - pi.velocity.z;
+//  printf("v is: %f, %f, %f\n", v.x, v.y, v.z);
 
   r_next.x = r.x + v.x * Time_step;
   r_next.y = r.y + v.y * Time_step;
@@ -269,6 +280,10 @@ __device__ struct vecfloat3 bodyBodyInteraction(struct Particle pi, struct Parti
   acc.y += r.y / radius * accel;
   acc.z += r.z / radius * accel;
 
+//  double abs_acc = acc.x*acc.x + acc.y*acc.y + acc.z*acc.z;
+//  if ((abs_acc > 100) || (abs_acc < -100)){
+//		printf("accel is: %f; pj is: %f, %f, %f; pi is: %f, %f, %f\n", accel, pj.position.x, pj.position.y, pj.position.z, pi.position.x, pi.position.y, pi.position.z);
+//  }
   return acc;
 }
 
@@ -306,8 +321,11 @@ __global__ void calculate_forces(struct Particle *devP, struct vecfloat3 *devA)
     	acc = tile_calculation(myParticle, acc);
     	__syncthreads();
   	}
+	devA[gtid] = acc;
+//	double abs_acc = acc.x*acc.x + acc.y*acc.y + acc.z*acc.z;
+//	if (abs_acc > 1000)
+//		printf("gtid is: %d; acc is: %.12f, %.12f, %.12f\n", gtid, acc.x, acc.y, acc.z);
 
-  	devA[gtid] = acc;
   } 
 
 }
@@ -321,7 +339,10 @@ __global__ void update_pos(struct Particle *devP, struct vecfloat3 *devA)
   	devP[i].position.x = devP[i].position.x + devP[i].velocity.x * Time_step + devA[i].x / 2.0f * pow(Time_step, 2.0); 
   	devP[i].position.y = devP[i].position.y + devP[i].velocity.y * Time_step + devA[i].y / 2.0f * pow(Time_step, 2.0); 
   	devP[i].position.z = devP[i].position.z + devP[i].velocity.z * Time_step + devA[i].z / 2.0f * pow(Time_step, 2.0); 
-  }
+	double abs_devA = devA[i].x*devA[i].x + devA[i].y*devA[i].y + devA[i].z*devA[i].z;
+//	if (abs_devA > 100)
+//		printf("devA in update_vel is: %f, %f, %f\n", devA[i].x, devA[i].y, devA[i].z);
+//  }
 	
 }
 
@@ -375,23 +396,27 @@ void particle_update(struct Particle *cpuP)
 	checkCudaErrors(cudaMemcpy(devP, cpuP, P_NUM*sizeof(struct Particle),cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
 
+//	printf("calc force 1 cpuP position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
     // update position
     calculate_forces<<<(P_NUM+TPB-1)/TPB, TPB, TPB*sizeof(struct Particle)>>>(devP, devA);
     getLastCudaError("Kernel execution failed");  	// check if kernel execution generated and error
     cudaDeviceSynchronize();
-
-//	printf("particle updating, test point 3\n");
+//	checkCudaErrors(cudaMemcpy(cpuP, devP, P_NUM*sizeof(struct Particle),cudaMemcpyDeviceToHost));
+//	printf("calc force 2 cpuP position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
 
     update_pos<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA);
 	getLastCudaError("Kernel execution failed");  	// check if kernel execution generated and error
     cudaDeviceSynchronize();
+//	checkCudaErrors(cudaMemcpy(cpuP, devP, P_NUM*sizeof(struct Particle),cudaMemcpyDeviceToHost));
+//	printf("calc force 3 cpuP position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
 	
-//	printf("particle updating, test point 4\n");
 
     // update velocity
     calculate_forces<<<(P_NUM+TPB-1)/TPB, TPB, TPB*sizeof(struct Particle)>>>(devP, devA_next);
 	getLastCudaError("Kernel execution failed");  	// check if kernel execution generated and error
     cudaDeviceSynchronize();
+//	checkCudaErrors(cudaMemcpy(cpuP, devP, P_NUM*sizeof(struct Particle),cudaMemcpyDeviceToHost));
+//	printf("calc force 3 cpuP position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
     update_vel<<<(P_NUM+TPB-1)/TPB, TPB>>>(devP, devA, devA_next);
 	getLastCudaError("Kernel execution failed");  	// check if kernel execution generated and error
     cudaDeviceSynchronize();
