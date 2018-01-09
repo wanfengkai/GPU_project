@@ -6,7 +6,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <sys/time.h>
 
 
 // # include <cstdlib>
@@ -31,6 +31,9 @@ const unsigned int height = 720;
 float fov = 45.0f;
 float rotangle = 0.0f;
 int dt = 1;
+int timestep = 0;
+struct timeval t1,t2;
+float caltime;
 vec4 red = vec4(1.0f, 0.0f, 0.0f, 0.5f);      // color red, silicate particle
 vec4 yellow = vec4(1.0f, 1.0f, 0.0f, 0.5f);      // color yellow, iron particle
 vec4 inputColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -68,6 +71,8 @@ void init()
 
 void draw_particle()
 {
+    timestep++;
+    printf("Timestep = %d  ", timestep);
     mat4 M,V,P,MVP,VP; 
     //matrix V
     mat4 rotationMat(1);  
@@ -145,10 +150,20 @@ void display()
 		printf("particle initialization\n");
         init_display = false;
     }
-
+    gettimeofday(&t1,NULL);
+    
     draw_particle();
+ 
+    gettimeofday(&t2,NULL);
+    caltime= t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec)/1000000.0;
+    printf("dt_gpu = %f  ", caltime);
+    
     particle_update(cpuP);
-
+    
+    gettimeofday(&t2,NULL);
+    caltime= t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec)/1000000.0;
+    printf("dt_gpu = %f\n", caltime);
+    
     // render loop
 
     glutSwapBuffers();
