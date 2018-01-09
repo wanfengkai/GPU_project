@@ -6,49 +6,11 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 #include <helper_functions.h>
-
-// universal gravitational constant in km
-#define G  6.67408E-20
-#define Epsilon 47.0975
-#define D 376.78
-#define Msi 7.4161E19   
-#define Mfe 1.9549E20
-#define Ksi 2.9114E14
-#define Kfe 5.8228E14
-#define KRPsi 0.01
-#define KRPfe 0.02
-#define SDPsi 0.001
-#define SDPfe 0.002
-#define Time_step 5.8117
-#define R 3185.5 
-#define R1 3185.5 
-#define R2 6371.0 
-#define PI 3.14
-#define Init_V 3.2416
-#define CENTER_MASS_X 3185.5
-#define CENTER_MASS_Z 0.0
-//#define CENTER_MASS_X 2392.5
-//#define CENTER_MASS_Z 9042.7
-#define OMEGA 1 
-#define P_NUM 10000
-#define TPB 256
-#define softeningSquared 0.01f
+#include "part.h"
 
 
 
-struct vecfloat3
-{
-	float x;
-	float y;
-	float z;
-};
 
-struct Particle
-{
-  struct vecfloat3 position;
-  struct vecfloat3 velocity;
-  bool p_type;   // true :silicate  false :iron
-};
 
 
 // particles' position & velocity
@@ -116,7 +78,7 @@ __global__ void initial_position_velocity(unsigned seed, struct Particle *partic
             miu= 1- 2 * rho2;   
             particles[i].position.x = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*cos(2*PI*rho3)- CENTER_MASS_X;
             particles[i].position.y = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*sin(2*PI*rho3);
-            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu - CENTER_MASS_Z;
+            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu;
         }
         else {
             // position initialization for inner core, iron particles   
@@ -128,7 +90,7 @@ __global__ void initial_position_velocity(unsigned seed, struct Particle *partic
         }
 
         // velocity initialization
-        particles[i].velocity.x = -1*Init_V;
+        particles[i].velocity.x = -Init_V;
         particles[i].velocity.y = 0;
         particles[i].velocity.z = 0;
     }

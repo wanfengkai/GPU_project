@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define D 376.78
+
 
 // # include <cstdlib>
 
@@ -31,8 +31,8 @@ const unsigned int height = 720;
 float fov = 45.0f;
 float rotangle = 0.0f;
 int dt = 1;
-vec4 red = vec4(0.5f, 0.0f, 0.0f, 0.5f);      // color red, silicate particle
-vec4 yellow = vec4(0.5f, 0.5f, 0.0f, 0.5f);      // color yellow, iron particle
+vec4 red = vec4(1.0f, 0.0f, 0.0f, 0.5f);      // color red, silicate particle
+vec4 yellow = vec4(1.0f, 1.0f, 0.0f, 0.5f);      // color yellow, iron particle
 vec4 inputColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
 bool init_display = false;
@@ -71,9 +71,9 @@ void draw_particle()
     mat4 M,V,P,MVP,VP; 
     //matrix V
     mat4 rotationMat(1);  
-    rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 1.0, 0.0));
-    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 50.0f, 1.0f));   
-    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
+    rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 0.0, 1.0));
+    vec3 vec = vec3(rotationMat * vec4(0.0f, 20.0f, 0.0f, 1.0f));   
+    V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 0.0f, 1.0f));
     //matrix P
     P = perspective(radians(fov), (float)width/(float)height, 0.1f, 10000.0f);
     //matrix VP
@@ -85,9 +85,8 @@ void draw_particle()
 
 		float r = D/20000.0;
 
-        // By default, this is identity matrix
-        M = mat4();
-
+       //matrix M
+        M = mat4(); // By default, this is identity matrix
         M = translate(M, vec3(cpuP[i].position.x/10000.0, cpuP[i].position.y/10000.0, cpuP[i].position.z/10000.0));
  		
  		if (cpuP[i].p_type == true)
@@ -98,7 +97,7 @@ void draw_particle()
         glUniformMatrix4fv(MLoc, 1, GL_FALSE, glm::value_ptr(M));
         glUniform4fv(inputColorLoc, 1, glm::value_ptr(inputColor));
 
-        glutSolidSphere(r,20,20);
+        glutSolidSphere(r,5,5);
 
     }
 

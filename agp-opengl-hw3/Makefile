@@ -1,7 +1,7 @@
 
 CPP     = g++ -std=c++11 -Wall --pedantic
-NVCC    = /usr/local/cuda/bin/nvcc -arch=sm_52
-INCDIR  = -I./ -I./util -I./modules/build/include -I/usr/local/cuda/include -I/usr/local/cuda/samples/common/inc
+NVCC    = /usr/local/cuda-9.1/bin/nvcc -arch=sm_30 #/usr/local/cuda/bin/nvcc -arch=sm_52
+INCDIR  = -I./ -I./util -I./modules/build/include -I/usr/local/cuda-9.1/include -I/usr/local/cuda-9.1/samples/common/inc
 LIBDIR  = -L./ -L./modules/build/lib 
 BINDIR  = ./bin
 OBJDIR  = $(BINDIR)/obj
@@ -12,7 +12,7 @@ MKDIR   = mkdir -p
 all: setup main.out
 
 main.out: util.o part_kernel.o
-	@$(CPP) $(CFLAGS) main.cpp -o $(BINDIR)/main.out $(OBJDIR)/*.o $(LIBS) -L/usr/local/cuda/lib64 -lcudart
+	@$(CPP) $(CFLAGS) main.cpp -o $(BINDIR)/main.out $(OBJDIR)/*.o $(LIBS) -L/usr/local/cuda-9.1/lib64 -lcudart
 
 # The following line is an example on how to compile your own clases. Use
 # the $(OBJDIR) directory to output your object files:
