@@ -101,7 +101,6 @@ void draw_particle()
         glutSolidSphere(r,20,20);
 
     }
-//    printf("drawing particles\n");
 
 }
 
@@ -147,11 +146,10 @@ void display()
 		printf("particle initialization\n");
         init_display = false;
     }
-//    printf("before particle position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
+
     draw_particle();
     particle_update(cpuP);
-//    printf("after particle position is: %f, %f, %f\n", cpuP[10].position.x, cpuP[10].position.y, cpuP[10].position.z);
-//   printf("particle update\n");
+
     // render loop
 
     glutSwapBuffers();
