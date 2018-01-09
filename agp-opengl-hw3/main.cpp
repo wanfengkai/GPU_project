@@ -156,7 +156,10 @@ void display()
  
     gettimeofday(&t2,NULL);
     caltime= t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec)/1000000.0;
-    printf("dt_gpu = %f  ", caltime);
+    printf("dt_cpu = %f  ", caltime);
+    
+    
+    gettimeofday(&t1,NULL);
     
     particle_update(cpuP);
     
@@ -164,6 +167,7 @@ void display()
     caltime= t2.tv_sec - t1.tv_sec + (t2.tv_usec - t1.tv_usec)/1000000.0;
     printf("dt_gpu = %f\n", caltime);
     
+ 
     // render loop
 
     glutSwapBuffers();
