@@ -25,8 +25,10 @@
 #define R2 6371.0 
 #define PI 3.14
 #define Init_V 3.2416
-#define CENTER_MASS_X 2392.5
-#define CENTER_MASS_Z 9042.7
+#define CENTER_MASS_X 3185.5
+#define CENTER_MASS_Z 0.0
+//#define CENTER_MASS_X 2392.5
+//#define CENTER_MASS_Z 9042.7
 #define OMEGA 1 
 #define P_NUM 10000
 #define TPB 256
@@ -52,13 +54,14 @@ struct Particle
 
 
 // particles' position & velocity
-__device__ void generate_uniform_random_number(unsigned seed, int i, double* rho1, double* rho2, double* rho3 ){
-    curandState state;
-    curand_init(seed, i, 0, &state);
+__device__ void generate_uniform_random_number(curandState state, double* rho1, double* rho2, double* rho3 ){
+//    curandState state;
+//    curand_init(seed, i, 0, &state);
     // 0 -1 range
     *rho1= curand_uniform(&state);
     *rho2= curand_uniform(&state);
     *rho3= curand_uniform(&state);
+//	printf("rho1 is: %f; rho2 is: %f; rho3 is : %f\n", *rho1, *rho2, *rho3);
 }
 
 
@@ -83,70 +86,73 @@ __global__ void initial_position_velocity(unsigned seed, struct Particle *partic
         particles[i].p_type = false ;  // iron particle
 
     if (curand_uniform(&state)>0.5)
-        planet = true   ;  // silicate particle
+        planet = true   ;  // Earth particle
     else
-        planet = false ;  // iron particle
+        planet = false ;  // Moon particle
     
     
     if (planet == true) {   
         if (particles[i].p_type == true) {
             // position initialization for outer shell, silicate particles
-            generate_uniform_random_number(seed, i, &rho1, &rho2, &rho3 );
+            generate_uniform_random_number(state, &rho1, &rho2, &rho3 );
             miu= 1- 2 * rho2;   
             particles[i].position.x = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*cos(2*PI*rho3)+ CENTER_MASS_X;
-            particles[i].position.y = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*sin(2*PI*rho3)+ CENTER_MASS_Z;
-            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu;
+            particles[i].position.y = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*sin(2*PI*rho3);
+            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu + CENTER_MASS_Z;
         }
         else {
             // position initialization for inner core, iron particles   
-            generate_uniform_random_number(seed, i, &rho1, &rho2, &rho3 );
+            generate_uniform_random_number(state, &rho1, &rho2, &rho3 );
             miu= 1- 2 * rho2;
             particles[i].position.x = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * cos(2*PI*rho3) + CENTER_MASS_X;
-            particles[i].position.y = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * sin(2*PI*rho3) + CENTER_MASS_Z;
-            particles[i].position.z = R * cbrt(rho1) * miu;
+            particles[i].position.y = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * sin(2*PI*rho3) ;
+            particles[i].position.z = R * cbrt(rho1) * miu + CENTER_MASS_Z;
         }
 
         // velocity initialization
         particles[i].velocity.x = Init_V;
         particles[i].velocity.y = 0;
         particles[i].velocity.z = 0;
+//		printf("planet moon particle position is: %f, %f, %f; rho1 is: %f; rho2 is: %f; rho3 is : %f\n;", particles[i].position.x, particles[i].position.y, particles[i].position.z, rho1, rho2, rho3);
         // calculate the distance r_xz on the plane xz from the center of mass for INER
-        float r_xz = sqrt(pow((particles[i].position.x + CENTER_MASS_X),2.0) + pow((particles[i].position.z + CENTER_MASS_Z),2.0));
-        float theta = atan((particles[i].position.z + CENTER_MASS_Z) / (particles[i].position.x + CENTER_MASS_X));
-        particles[i].velocity.x +=  OMEGA * r_xz * sin(theta);
-        particles[i].velocity.z +=  -OMEGA * r_xz * cos(theta);
-        particles[i].velocity.y +=  0;
+ //       float r_xz = sqrt(pow((particles[i].position.x + CENTER_MASS_X),2.0) + pow((particles[i].position.z + CENTER_MASS_Z),2.0));
+ //       float theta = atan((particles[i].position.z + CENTER_MASS_Z) / (particles[i].position.x + CENTER_MASS_X));
+ //       particles[i].velocity.x +=  OMEGA * r_xz * sin(theta);
+ //       particles[i].velocity.z +=  -OMEGA * r_xz * cos(theta);
+ //       particles[i].velocity.y +=  0;
     }
     else {
         if (particles[i].p_type == true) {
             // position initialization for outer shell, silicate particles
-            generate_uniform_random_number(seed, i, &rho1, &rho2, &rho3 );
+            generate_uniform_random_number(state, &rho1, &rho2, &rho3 );
             miu= 1- 2 * rho2;   
             particles[i].position.x = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*cos(2*PI*rho3)- CENTER_MASS_X;
-            particles[i].position.y = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*sin(2*PI*rho3)- CENTER_MASS_Z;
-            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu;
+            particles[i].position.y = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * sqrt(1-pow(miu,2.0))*sin(2*PI*rho3);
+            particles[i].position.z = cbrt(pow(R1,3.0)+(pow(R2,3.0)-pow(R1,3.0))*rho1) * miu - CENTER_MASS_Z;
         }
         else {
             // position initialization for inner core, iron particles   
-            generate_uniform_random_number(seed, i, &rho1, &rho2, &rho3 );
+            generate_uniform_random_number(state, &rho1, &rho2, &rho3 );
             miu= 1- 2 * rho2;
             particles[i].position.x = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * cos(2*PI*rho3) - CENTER_MASS_X;
-            particles[i].position.y = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * sin(2*PI*rho3) - CENTER_MASS_Z;
-            particles[i].position.z = R * cbrt(rho1) * miu;
+            particles[i].position.y = R * cbrt(rho1) * sqrt(1-pow(miu,2.0)) * sin(2*PI*rho3) ;
+            particles[i].position.z = R * cbrt(rho1) * miu - CENTER_MASS_Z;
         }
 
         // velocity initialization
         particles[i].velocity.x = -1*Init_V;
         particles[i].velocity.y = 0;
         particles[i].velocity.z = 0;
+//		printf("planet moon particle position is: %f, %f, %f; rho1 is: %f; rho2 is: %f; rho3 is : %f\n;", particles[i].position.x, particles[i].position.y, particles[i].position.z, rho1, rho2, rho3);
         // calculate the distance r_xz on the plane xz from the center of mass for INER
-        float r_xz = sqrt(pow((particles[i].position.x - CENTER_MASS_X),2.0) + pow((particles[i].position.z - CENTER_MASS_Z),2.0));
-        float theta = atan((particles[i].position.z - CENTER_MASS_Z) / (particles[i].position.x - CENTER_MASS_X));
-        particles[i].velocity.x +=  OMEGA * r_xz * sin(theta);
-        particles[i].velocity.z +=  -OMEGA * r_xz * cos(theta);
-        particles[i].velocity.y +=  0;
+//        float r_xz = sqrt(pow((particles[i].position.x - CENTER_MASS_X),2.0) + pow((particles[i].position.z - CENTER_MASS_Z),2.0));
+//        float theta = atan((particles[i].position.z - CENTER_MASS_Z) / (particles[i].position.x - CENTER_MASS_X));
+//        particles[i].velocity.x +=  OMEGA * r_xz * sin(theta);
+//        particles[i].velocity.z +=  -OMEGA * r_xz * cos(theta);
+//        particles[i].velocity.y +=  0;
     }
 }
+
     
 }
 

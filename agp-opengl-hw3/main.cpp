@@ -72,10 +72,10 @@ void draw_particle()
     //matrix V
     mat4 rotationMat(1);  
     rotationMat = rotate(rotationMat, rotangle, vec3(0.0, 1.0, 0.0));
-    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 9.0f, 1.0f));   
+    vec3 vec = vec3(rotationMat * vec4(0.0f, 0.0f, 50.0f, 1.0f));   
     V = lookAt(vec, vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f));
     //matrix P
-    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 100.0f);
+    P = perspective(radians(fov), (float)width/(float)height, 0.1f, 10000.0f);
     //matrix VP
     VP = P * V;  
     glUniformMatrix4fv(VPLoc, 1, GL_FALSE, glm::value_ptr(VP)); 
@@ -83,12 +83,12 @@ void draw_particle()
     for (int i = 0; i<P_NUM; i++)  
     {  
 
-		float r = D/2000.0;
+		float r = D/20000.0;
 
         // By default, this is identity matrix
         M = mat4();
 
-        M = translate(M, vec3(cpuP[i].position.x/1000000.0, cpuP[i].position.y/1000000.0, cpuP[i].position.z/1000000.0));
+        M = translate(M, vec3(cpuP[i].position.x/10000.0, cpuP[i].position.y/10000.0, cpuP[i].position.z/10000.0));
  		
  		if (cpuP[i].p_type == true)
  			inputColor = red;
