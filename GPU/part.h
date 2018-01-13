@@ -16,8 +16,8 @@
 #define Epsilon 47.0975
 #define D 376.78
 #define Mearth 5.97219E24
-#define Msi Mearth*0.6/0.86/P_NUM //7.4161E21//19   
-#define Mfe Mearth*0.4/0.14/P_NUM //1.9549E22//20
+#define Msi Mearth*0.7/0.86/P_NUM*2 //7.4161E21//19   
+#define Mfe Mearth*0.3/0.14/P_NUM*2 //1.9549E22//20
 #define Ksi 2.9114E14//01//11 -11 +01 seems good as well
 #define Kfe 5.8228E14//01//11 -11 +01 seems good as well
 #define KRPsi 0.01
