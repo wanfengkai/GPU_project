@@ -37,7 +37,7 @@ __global__ void initial_position_velocity(unsigned seed, struct Particle *partic
 
     bool planet;  // true: Earth ; false: Moon
 
-    if (curand_uniform(&state)>0.5)
+    if (curand_uniform(&state)>0.14)
         particles[i].p_type = true  ;  // silicate particle
     else
         particles[i].p_type = false ;  // iron particle

@@ -15,10 +15,11 @@
 #define G  6.67408E-20
 #define Epsilon 47.0975
 #define D 376.78
-#define Msi 7.4161E21//19   
-#define Mfe 1.9549E22//20
-#define Ksi 2.9114E01//11 -11 +01 seems good as well
-#define Kfe 5.8228E01//11 -11 +01 seems good as well
+#define Mearth 5.97219E24
+#define Msi Mearth*0.6/0.86/P_NUM //7.4161E21//19   
+#define Mfe Mearth*0.4/0.14/P_NUM //1.9549E22//20
+#define Ksi 2.9114E14//01//11 -11 +01 seems good as well
+#define Kfe 5.8228E14//01//11 -11 +01 seems good as well
 #define KRPsi 0.01
 #define KRPfe 0.02
 #define SDPsi 0.001
@@ -28,7 +29,7 @@
 #define R1 3185.5 
 #define R2 6371.0 
 #define PI 3.14
-#define Init_V -15.416
+#define Init_V -3.2416
 #define CENTER_MASS_X 3185.5f
 #define CENTER_MASS_Z 500.0f
 //#define CENTER_MASS_X 2392.5
@@ -51,12 +52,6 @@ struct Particle
   bool p_type;   // true :silicate  false :iron
 };
 
-
-
-//void launch_kernel_initial_position_velocity(unsigned seed, struct Particle *particles);
-//void launch_kernel_calculate_forces(void *devP, void *devA);
-//void launch_kernel_update_pos(void *devP, void *devA);
-//void launch_kernel_update_vel(void *devP, void *devA, void *devA_next);
 
 void particle_init(unsigned seed, struct Particle *cpuP);
 void particle_update(struct Particle *cpuP);
