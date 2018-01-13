@@ -3,45 +3,16 @@
 
 
 Github usage:
-
-first : git clone https://github.com/wanfengkai/GPU_project.git
-
+### Clone the git of our project
+git clone https://github.com/wanfengkai/GPU_project.git
 cd GPU_project
 
+## Usage on final working version
+The final working version that you can use is folder: ***GPU***.
+The way to run the code is:
 
-after init
+***./scripts/build_libs.sh ./scripts/run.sh***
 
-git add file_you_want
-
-git commit -m 'message why you add'
-
-git push
-
-Cuda reference :https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch31.html
-
-Cuda intergration:
-
-export PATH=/usr/local/cuda-9.0/bin:$PATH
-
-nvcc -arch=sm_30 -c part.cu -o part.o
-
-g++ main.cpp -o main.out part.o -L/usr/local/cuda-9.0/lib64 -lcudart
-
-
-/usr/local/cuda-9.1/bin/nvcc -arch=sm_30 -c cuda.cu -o cuda.o
-
-
-opengl
-
-./scripts/build_libs.sh
-./scripts/run.sh
-
-latex public:
-https://www.overleaf.com/12785258qvjpxpnpjpyx
-
-Here is our final report.
-
-We can edit it online.
 
 
 
